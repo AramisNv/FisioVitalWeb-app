@@ -1,0 +1,11 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+
+# Archivos temporales
+.env
+.DS_Store
+*.log
+.vscode/
