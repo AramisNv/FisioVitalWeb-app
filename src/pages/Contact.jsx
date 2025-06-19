@@ -21,21 +21,29 @@ const Contact = () => {
     description: ""
   })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log("Form submitted:", formData)
-    toast({
-      title: "Formulario enviado",
-      description: "Nos pondremos en contacto contigo pronto.",
-    })
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      requestType: "",
-      description: ""
-    })
+// Contador de palabras
+const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch('http://localhost:5000/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      alert('Mensaje enviado correctamente');
+      setFormData({ name: '', email: '', phone: '', requestType: '', description: '' });
+    } else {
+      alert(result.error || 'Error al enviar');
+    }
+  } catch (error) {
+    alert('Error de conexión con el servidor');
   }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -104,8 +112,13 @@ const Contact = () => {
                 <Input
                   id="name"
                   name="name"
+                  pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+                  title="Solo se permiten letras y espacios"
                   value={formData.name}
-                  onChange={handleChange}
+                  onChange={(e) => {const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/
+                    if (regex.test(e.target.value)) {
+                    handleChange(e)}
+                }}
                   required
                 />
               </div>
@@ -126,8 +139,16 @@ const Contact = () => {
                   id="phone"
                   name="phone"
                   type="tel"
+                  pattern="\d{10}"
+                  maxLength="10"
+                  title="Introduce un teléfono válido de 10 dígitos"
                   value={formData.phone}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const onlyNums = e.target.value.replace(/\D/g, '');
+                    if (onlyNums.length <= 10) {
+                      setFormData(prev => ({ ...prev, phone: onlyNums }));
+                    }
+                  }}
                   required
                 />
               </div>
@@ -155,8 +176,12 @@ const Contact = () => {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
+                  maxLength={1000}
                   required
-                />
+                  />
+                  <p className="text-sm text-gray-500">
+                  Palabras: {wordCount} / 1000
+                </p>
               </div>
               <Button type="submit" className="w-full">Enviar</Button>
             </form>
